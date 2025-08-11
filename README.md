@@ -27,6 +27,10 @@ This module bridges speech recognition with Cozmo robot control using AI agents.
    
 2. Replace "YOUR-API_KEY" in the code with your actual key
 
+**Video tutorial**
+
+- [Link to video in Google Drive](https://drive.google.com/file/d/1ObVg8ZZqoUvDrD-2CKwEPTUWRmtsg_9d/view?usp=drive_link)
+
 ### Example:
 ```bash
 import os, sys
