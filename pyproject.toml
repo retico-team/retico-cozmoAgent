@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=80", "setuptools-scm[simple]>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "retico-cozmoagent"
+dynamic = ["version"]
+dependencies = [
+    "retico-core>=2.0.0",
+    "smolagents[openai]~=1.19.0",
+]
+requires-python = ">=3.10, <4"
+authors = [
+    {name = "Anh Bui"},
+]
+description = "A ReTiCo module that turns voice commands into Cozmo robot actions using SmolAgents."
+readme = "README.md"
+license = { file = "LICENSE" }
+keywords = [
+    "retico",
+    "framework",
+    "incremental",
+    "dialogue",
+    "dialog",
+    "robot",
+    "cozmo",
+    "agent",
+    "smolagents",
+    "llm",
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+]
+
+[project.urls]
+Repository = "https://github.com/retico-team/retico-cozmoAgent"
+
+[tool.setuptools_scm]
+version_file = "retico_cozmoagent/version.py"

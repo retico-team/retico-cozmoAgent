@@ -1,0 +1,2 @@
+from retico_cozmoagent.cozmoSmolAgents import CozmoSmolAgentsModule
+from retico_cozmoagent.version import __version__

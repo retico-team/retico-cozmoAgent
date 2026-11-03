@@ -1,61 +1,66 @@
-# cozmoAgent
-A voice-controlled Cozmo robot agent built with SmolAgents and Retico framework. Transform natural speech commands into executable robot behaviors!
+# retico-cozmoAgent
+A ReTiCo module for a voice-controlled Cozmo robot agent, built with [SmolAgents](https://github.com/huggingface/smolagents). It turns natural speech commands into step-by-step plans of Cozmo robot behaviors.
 
-## Overview 📋
-This module bridges speech recognition with Cozmo robot control using AI agents. This module transforms voice commands into step-by-step execution plans using Cozmo behavior functions. It doesn't actually control the robot - instead, it creates GenericDictIU that you can pass to a DM or CozmoModule to make Cozmo execute the tasks.
+The module doesn't control the robot itself. Instead, it produces a `GenericDictIU` for each step of the plan, which you can pass to a dialogue manager or a Cozmo module to make Cozmo carry out the task.
 
-***Available Commands 🎯***
-- "drive_straight()"
-- "turn_in_place()"
-- "say_text()"
-- "look_around()"
-- "go_to_object()"
-- "drive_to_charger()"
-- "move_head()"
+A video tutorial can be found [here](https://drive.google.com/file/d/1ObVg8ZZqoUvDrD-2CKwEPTUWRmtsg_9d/view?usp=drive_link).
 
-## Installation 🚀
-**Requirements**
-- Python 3.10.
-- smolagent: 1.19.x
+## Installation and Requirements
 
-**Set up**
-1. Clone this repository:
-   ```bash
-   git clone: https://github.com/AnhBui1108/cozmoAgent.git
-   cd cozmoAgent
-   ```
-   
-2. Replace "YOUR-API_KEY" in the code with your actual key
+To use the Cozmo agent module you first need to install the retico-cozmoagent package:
+* Install retico-cozmoagent:
+```pip install retico-cozmoagent```
 
-**Video tutorial**
+  or, for the latest development version from GitHub:
+```pip install git+https://github.com/retico-team/retico-cozmoAgent.git```
 
-- [Link to video in Google Drive](https://drive.google.com/file/d/1ObVg8ZZqoUvDrD-2CKwEPTUWRmtsg_9d/view?usp=drive_link)
+This also installs its Python dependencies (`retico-core` and `smolagents` 1.19). Python 3.10 or newer is required.
 
-### Example:
+### API key
+The agent uses an LLM through an OpenAI-compatible API. By default it uses DeepSeek V3 (`deepseek/deepseek-chat-v3-0324:free`) through [OpenRouter](https://openrouter.ai/). Either pass your API key as the `api_key` argument, or set the `OPENROUTER_API_KEY` environment variable:
 ```bash
-import os, sys
+OPENROUTER_API_KEY=<your-api-key>
+```
 
-from smolagents import CodeAgent, DuckDuckGoSearchTool
-from smolagents.models import OpenAIServerModel
+## Modules
 
-prefix = '<path-to-retico-module-repositories>'
+### `CozmoSmolAgentsModule`
+Subscribes to `SpeechRecognitionIU` (e.g. from `WhisperASRModule`) and outputs `GenericDictIU`. Once the user's speech is committed, the agent turns it into an execution plan and sends one committed `GenericDictIU` per step. If the command is unclear, the agent asks for clarification with `say_text()` instead. The last 8 messages of the conversation are given to the agent as context.
 
-os.environ['RETICO'] = prefix +'retico_core'
-os.environ['WS']= prefix + 'retico-whisperasr'
-os.environ['AG']= prefix + 'cozmoAgent'
-os.environ['TTS'] = prefix + 'retico-speechbraintts'
+Each `GenericDictIU` payload has the form:
+```python
+{
+    'function': 'drive_straight',          # the Cozmo behavior to run
+    'parameters': {'distance_mm': 200, 'speed_mmps': 50},
+    'step_number': 1,                       # the position of this step in the plan
+    'tool_result': {...}                    # the raw output of the agent's tool call
+}
+```
 
-sys.path.append(os.environ['RETICO'])
-sys.path.append(os.environ['WS'])
-sys.path.append(os.environ['AG'])
-sys.path.append(os.environ['TTS'])
+Available Cozmo behaviors:
+* `drive_straight`: drive forward or backward (`distance_mm`, `speed_mmps`)
+* `turn_in_place`: turn left (positive) or right (negative) (`angle_degrees`)
+* `say_text`: make Cozmo speak (`text`)
+* `move_head`: lift (positive) or lower (negative) the head (`radians`)
+* `look_around`: look around for a cube
+* `go_to_object`: find a cube and drive up to it (`distance_mm`)
+* `drive_to_charger`: drive to the charger
 
+#### Arguments:
+* `model_id` (str): the model the agent uses; defaults to `"deepseek/deepseek-chat-v3-0324:free"`
+* `api_base` (str): the URL of the OpenAI-compatible server; defaults to `"https://openrouter.ai/api/v1"`
+* `api_key` (str): the API key for the server; defaults to `None` (uses `OPENROUTER_API_KEY`)
+
+### Example
+**Note:** The example uses `MicrophoneModule` and `DebugModule` from `retico_core` and `WhisperASRModule` from [retico-whisperasr](https://github.com/retico-team/retico-whisperasr) (`pip install retico-whisperasr`).
+
+```python
 from retico_core.debug import DebugModule
-from retico_core.audio import MicrophoneModule,  SpeakerModule
+from retico_core.audio import MicrophoneModule
 from retico_whisperasr.whisperasr import WhisperASRModule
-from cozmoSmolAgents import CozmoSmolAgentsModule
+from retico_cozmoagent import CozmoSmolAgentsModule
 
-mic = MicrophoneModule(chunk_size = 320, rate = 16000)
+mic = MicrophoneModule(chunk_size=320, rate=16000)
 debug = DebugModule()
 asr = WhisperASRModule()
 dm = CozmoSmolAgentsModule()
@@ -75,4 +80,4 @@ asr.stop()
 mic.stop()
 dm.stop()
 debug.stop()
-
+```

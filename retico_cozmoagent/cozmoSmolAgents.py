@@ -2,6 +2,7 @@ import threading
 import logging
 import re
 from typing import List, Dict, Any
+import os
 import json
 
 
@@ -73,11 +74,11 @@ class CozmoSmolAgentsModule(abstract.AbstractModule):
 
 
     """
-    model = OpenAIServerModel(
-        model_id= "deepseek/deepseek-chat-v3-0324:free",
-        api_base = "https://openrouter.ai/api/v1",
-        api_key="YOUR-API_KEY" # Insert your API key here
-        ) 
+    #model = OpenAIServerModel(
+        #model_id= "deepseek/deepseek-chat-v3-0324:free",
+        #api_base = "https://openrouter.ai/api/v1",
+        #api_key="YOUR-API_KEY" # Insert your API key here
+        #)
 
 
     # Wrap cozmo function behavior as a tool
@@ -218,8 +219,26 @@ class CozmoSmolAgentsModule(abstract.AbstractModule):
 
 
     #Initiate agent
-    def __init__(self, **kwargs):
+    def __init__(
+        self,
+        model_id="deepseek/deepseek-chat-v3-0324:free",
+        api_base="https://openrouter.ai/api/v1",
+        api_key=None,
+        **kwargs,
+    ):
+        """
+        Args:
+            model_id (str): the model to use for the agent.
+            api_base (str): the URL of the OpenAI-compatible server.
+            api_key (str): the API key for the server. Defaults to the
+                OPENROUTER_API_KEY environment variable.
+        """
         super().__init__(**kwargs)
+        self.model = OpenAIServerModel(
+            model_id=model_id,
+            api_base=api_base,
+            api_key=api_key if api_key is not None else os.getenv("OPENROUTER_API_KEY"),
+        )
         self.agent = CodeAgent(
             tools = [
                 self.drive_straight,
